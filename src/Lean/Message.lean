@@ -131,7 +131,7 @@ inductive MessageData where
   /-- Lifted `Format.nest` -/
   | nest              : Nat → MessageData → MessageData
   /-- Lifted `Format.group` -/
-  | group             : MessageData → MessageData
+  | group             : MessageData → (behavior : Std.Format.FlattenBehavior := .allOrNone) → MessageData
   /-- Lifted `Format.compose` -/
   | compose           : MessageData → MessageData → MessageData
   /-- Tagged sections. `Name` should be viewed as a "kind", and is used by `MessageData` inspector functions.
@@ -186,7 +186,7 @@ partial def hasTag : MessageData → Bool
   | withContext _ msg           => hasTag msg
   | withNamingContext _ msg     => hasTag msg
   | nest _ msg                  => hasTag msg
-  | group msg                   => hasTag msg
+  | group msg _                 => hasTag msg
   | compose msg₁ msg₂           => hasTag msg₁ || hasTag msg₂
   | tagged n msg                => p n || hasTag msg
   | trace data msg msgs         => p data.cls || hasTag msg || msgs.any hasTag
@@ -355,7 +355,7 @@ where
   | withContext ctx msg       => visit ctx.mctx msg
   | withNamingContext _ msg   => visit mctx? msg
   | nest _ msg                => visit mctx? msg
-  | group msg                 => visit mctx? msg
+  | group msg _               => visit mctx? msg
   | compose msg₁ msg₂         => visit mctx? msg₁ || visit mctx? msg₂
   | tagged _ msg              => visit mctx? msg
   | ofOriginatingSyntax _ msg  => visit mctx? msg
@@ -382,7 +382,7 @@ partial def formatAux : NamingContext → Option MessageDataContext → MessageD
   | nCtx, ctx,       ofOriginatingSyntax _ d              => formatAux nCtx ctx d
   | nCtx, ctx,       nest n d                 => Format.nest n <$> formatAux nCtx ctx d
   | nCtx, ctx,       compose d₁ d₂            => return (← formatAux nCtx ctx d₁) ++ (← formatAux nCtx ctx d₂)
-  | nCtx, ctx,       group d                  => Format.group <$> formatAux nCtx ctx d
+  | nCtx, ctx,       group d b                => Format.group (behavior := b) <$> formatAux nCtx ctx d
   | nCtx, ctx,       trace data header children => do
     let childFmts ← children.mapM (formatAux nCtx ctx)
     if data.cls.isAnonymous then
@@ -447,6 +447,8 @@ def joinSep : List MessageData → MessageData → MessageData
   | [],    _   => Format.nil
   | [a],   _   => a
   | a::as, sep => a ++ sep ++ joinSep as sep
+/-- Lifted `Format.fill` -/
+def fill : MessageData → MessageData := group (behavior := .fill)
 
 /-- Write the given list of messages as a list, separating each item with `,\n` and surrounding with square brackets. -/
 def ofList : List MessageData → MessageData
