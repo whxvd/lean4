@@ -19606,9 +19606,9 @@ return v___x_5315_;
 LEAN_EXPORT lean_object* l_Lean_Server_FileWorker_handlePreRequestSpecialCases_x3f___lam__0___boxed(lean_object* v_doc_5316_, lean_object* v_id_5317_, lean_object* v_a_5318_, lean_object* v___x_5319_, lean_object* v___y_5320_, lean_object* v___y_5321_){
 _start:
 {
-uint8_t v___x_8517__boxed_5322_; lean_object* v_res_5323_; 
-v___x_8517__boxed_5322_ = lean_unbox(v___x_5319_);
-v_res_5323_ = l_Lean_Server_FileWorker_handlePreRequestSpecialCases_x3f___lam__0(v_doc_5316_, v_id_5317_, v_a_5318_, v___x_8517__boxed_5322_, v___y_5320_);
+uint8_t v___x_8513__boxed_5322_; lean_object* v_res_5323_; 
+v___x_8513__boxed_5322_ = lean_unbox(v___x_5319_);
+v_res_5323_ = l_Lean_Server_FileWorker_handlePreRequestSpecialCases_x3f___lam__0(v_doc_5316_, v_id_5317_, v_a_5318_, v___x_8513__boxed_5322_, v___y_5320_);
 lean_dec_ref(v___y_5320_);
 return v_res_5323_;
 }
