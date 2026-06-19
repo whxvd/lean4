@@ -1741,9 +1741,9 @@ return v___x_308_;
 LEAN_EXPORT lean_object* l_Lake_AnsiMode_isEnabled___boxed(lean_object* v_out_309_, lean_object* v_x_310_, lean_object* v_a_311_){
 _start:
 {
-uint8_t v_x_146__boxed_312_; uint8_t v_res_313_; lean_object* v_r_314_; 
-v_x_146__boxed_312_ = lean_unbox(v_x_310_);
-v_res_313_ = l_Lake_AnsiMode_isEnabled(v_out_309_, v_x_146__boxed_312_);
+uint8_t v_x_140__boxed_312_; uint8_t v_res_313_; lean_object* v_r_314_; 
+v_x_140__boxed_312_ = lean_unbox(v_x_310_);
+v_res_313_ = l_Lake_AnsiMode_isEnabled(v_out_309_, v_x_140__boxed_312_);
 v_r_314_ = lean_box(v_res_313_);
 return v_r_314_;
 }
