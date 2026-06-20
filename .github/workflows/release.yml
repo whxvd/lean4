@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ensure run from tag
+        run: |
+          if [[ "${{ github.ref }}" != refs/tags/* ]]; then
+            echo "::error::This workflow must be run from a tag."
+            exit 1
+          fi
+          echo "Tag: ${{ github.ref_name }}"
+
+      - name: Find workflow run
+        id: find_run
+        uses: actions/github-script@v9
+        with:
+          retries: 3
+          script: |
+            const sha = context.sha;
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build.yml',
+              head_sha: sha,
+              status: 'success',
+            }));
+            if (runs.length == 0) {
+              console.log(`::error::No successful build job for ${ref}`);
+              process.exit(1);
+            }
+            const run = runs.reduce((prev, next) => {
+              const prev_time = new Date(prev.created_at);
+              const next_time = new Date(next.created_at);
+              return next_time > prev_time ? next : prev
+            });
+            core.setOutput('id', run.id);
+            console.log(`Run id: ${run.id}`);
+            console.log(`For SHA: ${context.sha}`);
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_run.outputs.id }}
+
+      - name: List artifacts
+        run: |
+          tree --du -h artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: artifacts/**
+          fail_on_unmatched_files: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
