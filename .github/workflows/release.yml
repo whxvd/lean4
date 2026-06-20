@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find workflow run
+        id: find_run
+        uses: actions/github-script@v9
+        env:
+          TAG: ${{ inputs.tag }}
+        with:
+          retries: 3
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const tag = process.env.TAG;
+
+            core.notice(`tag: ${tag}`);
+
+            const { data: { object: { sha }}} =
+              await github.rest.git.getRef({ owner, repo, ref: `tags/${tag}` });
+
+              core.notice(`sha: ${sha}`);
+
+            const runs = await github.paginate(
+              github.rest.actions.listWorkflowRuns, ({
+                owner, repo,
+                workflow_id: 'build.yml',
+                head_sha: sha,
+                status: 'success',
+            }));
+
+            if (runs.length == 0) {
+              core.error(`No successful build job for ${sha}`);
+              process.exit(1);
+            }
+
+            const run = runs.reduce((acc, next) => {
+              const acc_time = new Date(acc.created_at);
+              const next_time = new Date(next.created_at);
+              return next_time > acc_time ? next : acc;
+            });
+
+            core.notice(`build run id: ${run.id}`);
+            core.setOutput('id', run.id);
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.find_run.outputs.id }}
+
+      - name: List artifacts
+        run: |
+          tree --du -h artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: artifacts/**
+          fail_on_unmatched_files: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
