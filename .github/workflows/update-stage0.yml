@@ -38,7 +38,7 @@ jobs:
       run: |
         echo "NPROC=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)" >> $GITHUB_ENV
     - name: Restore Cache
-      uses: actions/cache/restore@v5
+      uses: actions/cache/restore@v6
       with:
         # NOTE: must be in sync with `restore-cache` in `build-template.yml`
         path: |
